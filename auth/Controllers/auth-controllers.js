@@ -40,4 +40,23 @@ const loginuser=async(req,res)=>{
         res.status(500).json({message:error.message});
     }
 }
-module.exports={registeruser,loginuser};
+const changepassword=async (req,res)=>{
+    try{
+        const userid=req.user.userId;
+        const {oldpass,newpass}=req.body;
+        const user=await User.findById(userid);
+        if(!user){
+            return res.status(404).json({message:"User not found"});
+        }
+        const isMatch=await bcrypt.compare(oldpass,user.password);
+        if(!isMatch){
+            return res.status(401).json({message:"Invalid credentials"});
+        }
+        user.password=await bcrypt.hash(newpass,process.env.HASH_SALT_ROUNDS);
+        await  user.save();
+        res.status(200).json({message:"Password changed successfully"});
+    }catch(error){
+        res.status(500).json({message:error.message});
+    }
+}
+module.exports={registeruser,loginuser,changepassword};

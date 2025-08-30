@@ -1,6 +1,7 @@
 const Image=require('../models/image');
 const {uploadtocloudinary}=require('../helpers/cloudinaryHelper');
 const fs=require('fs');
+const cloudinary=require('../config/cloudinary');
 const uploadImage=async (req,res)=>{
     try{
         if(!req.file){
@@ -49,5 +50,36 @@ const fetchImages=async (req,res)=>{
         });
     }
 }
+const deleteimage=async(req,res)=>{
+    try {
+        const image=await Image.findById(req.params.id);
+        const userId=req.user.userId;
+        if(!image){
+            return res.status(404).json({
+                success:false,
+                message:'Image not found'
+            });
+        }
 
-module.exports={uploadImage,fetchImages};
+        if(image.uploadedBy.toString()!==userId){
+            return res.status(403).json({
+                success:false,
+                message:'Unauthorized'
+            });
+        }
+
+        await cloudinary.uploader.destroy(image.publicId);
+        await Image.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+            success:true,
+            message:'Image deleted successfully'
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success:false,
+            message:'something went wrong'
+        });
+    }
+}
+module.exports={uploadImage,fetchImages,deleteimage};
