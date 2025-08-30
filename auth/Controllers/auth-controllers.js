@@ -1,5 +1,4 @@
 const User = require('../models/User');
-require('dotenv').config();
 const registeruser=async(req,res)=>{
     try{
         const {username,email,password,role}=req.body;
